@@ -145,7 +145,6 @@ def metro_ising(L, T, h):
 
 
 chain_lenght = 100 # 10000 is too big
-#T = [0.1, 0.5, 2.0, 10.0]
 h_arr = [0.1, 0.5, 1, 5]
 T = np.linspace(0.1, 30, 10)
 
@@ -157,17 +156,9 @@ T = np.linspace(0.1, 30, 10)
 # plt.legend()
 # plt.show()
 
+
 # b)
-# i = 0
-# for h in h_arr:
-#     m_val = []
-#     for temp in T:
-#         m_val.append(metro_ising(chain_lenght, temp, h_arr[i]))
-#
-#     plt.plot(T, m_val, label="h = " + str(h_arr[i]))
-#     plt.ylabel("magnetization m")
-#     plt.xlabel("Temperature T")
-#     i += 1
+
 m_val = []
 for temp in T:
     m = metro_ising(chain_lenght, temp, h_arr[0])
@@ -179,6 +170,4 @@ plt.xlabel("Temperature T")
 plt.legend()
 plt.show()
 
-# state = 2*np.random.randint(2, size=(10,10))-1
-# print(state)
 
