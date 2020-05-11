@@ -1,0 +1,164 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib import rc # to save animation
+
+
+#problem 3 d) at line 123
+
+# CONSTANTS
+#--------------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------
+
+
+N = 4 # bodies
+G = 1
+R = 1 # radius
+m = 1 # mass
+Tmax = 10
+time_steps = 1000 # the more the better, but slower
+T = np.linspace(0, Tmax, time_steps)
+dt = Tmax/len(T) # todo len-1 ?
+
+# to save the animation
+rc('animation', html='html5')
+
+
+# FUNCTIONS
+#--------------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------
+
+
+def a(body, u, direction):
+    """ calculates acceleration of body i in direction x or y """
+
+    a = 0
+
+    if direction == "x":
+        for i in range(N):
+            if i != body:
+
+                # calculating the norm
+                x = u[body, 0] - u[i, 0]
+                y = u[body, 1] - u[i, 1]
+                norm = np.sqrt(x**2 + y**2)
+
+                a += (u[body, 0] - u[i, 0]) / (norm**3)
+
+    else: # y direction
+        for i in range(N):
+            if i != body:
+
+                x = u[body, 0] - u[i, 0]
+                y = u[body, 1] - u[i, 1]
+                norm = np.sqrt(x**2 + y**2)
+
+                a += (u[body, 1] - u[i, 1]) / (norm**3)
+
+    return a
+
+
+
+def f(u, body):
+    """" calculates f = du/dt for given body and multiplies it with dt """
+
+    f = []
+    f.append(u[body, 2]*dt)
+    f.append(u[body, 3]*dt)
+    f.append(-m**2*G*a(body, u, "x")*dt)
+    f.append(-m**2*G*a(body, u, "y")*dt)
+
+    return f
+
+
+
+def euler(u_int, time_steps):
+    """" aproximates differential equation via euler method """
+
+    # initial
+    x = np.empty(shape=(time_steps, N))
+    y = np.empty(shape=(time_steps, N))
+    x[0] = u_int[:, 0]
+    y[0] = u_int[:, 1]
+
+    u = u_int.copy() # u is list of u vectors for each body
+
+    for step in range(time_steps - 1):
+
+        new_u = np.empty(shape=(N, 4))
+        for body in range(N):
+            new_u[body] = np.add(u[body, :], f(u, body))
+            new_u[body] = np.array([sum(i) for i in zip(u[body, :], f(u, body))]) # this adds two lists elment wise
+            x[step + 1, body] = new_u[body, 0]
+            y[step + 1, body] = new_u[body, 1]
+
+        u = new_u.copy()
+        step += 1
+
+    return x, y
+
+
+
+# INITIALIZING
+#--------------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------
+
+
+# calculating initial velocity
+v = 0
+for j in range(2, N+1):
+    v += 1 / np.sin((j - 1) * np.pi / N)
+
+v = np.sqrt(v * G * m / (4 * R))
+
+
+
+#initial (t=0)
+u_int = np.empty(shape=(N, 4))
+for body in range(N):
+    u_int[body, 0] = R * np.cos((body - 1) * 2 * np.pi / N)
+    u_int[body, 1] = R * np.sin((body - 1) * 2 * np.pi / N)
+    u_int[body, 2] = -np.sin((body - 1) * 2 * np.pi / N)*v
+    u_int[body, 3] = np.cos((body - 1) * 2 * np.pi / N)*v
+
+
+# d) choose whether to displace first body at t=0
+#--------------------------------------------------------------------------------------------------------------------------------------
+
+d = True
+displacement = N/100
+if d:
+    u_int[0, 0] = (R * np.cos((displacement - 1) * 2 * np.pi / N))  # x
+
+
+# ANIMATION
+#--------------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------
+
+
+bodies_x, bodies_y = euler(u_int, time_steps)
+xdata = bodies_x[0, :] # first frame of the plot, needed for init()
+ydata = bodies_y[0, :]
+circle_x = bodies_x[0, :] # simulating bodies (circles)
+circle_y = bodies_y[0, :]
+fig = plt.figure()
+
+def init(): # initializes the animation, calls first frame
+    plt.clf()
+    plt.plot(xdata, ydata)
+    plt.plot(circle_x, circle_y, 'o',  linewidth=20, markersize=30)
+
+def animate(i): # calls the i'th frame
+    plt.clf()
+    for body in range(N):
+        xdata = bodies_x[0:i+1, body]
+        ydata = bodies_y[0:i+1, body]
+        plt.plot(xdata, ydata)
+        circle_x = bodies_x[i+1, :]
+        circle_y = bodies_y[i+1, :]
+    plt.plot(circle_x, circle_y, 'o', linewidth=20, markersize=30)
+    plt.title('t = ' + str(i))
+
+anim = animation.FuncAnimation(fig, animate, init_func=init, interval=10, frames=time_steps-1, repeat=False) # interval is delay between frames in ms
+plt.show()
+#anim.save('/Users/alexspecht/Desktop/animation2.gif', writer='imagemagick', fps=60)
