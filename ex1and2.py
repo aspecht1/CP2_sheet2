@@ -104,9 +104,9 @@ def H(lattice, i, j, h, T):
     energy difference only depends on the neighbours of spin flipped site """
 
     gamma = np.random.rand()
-    delta_E = -2*lattice[i, j] * (lattice[i, j - 1] + lattice[i - 1, j] + lattice[i, j + 1] + lattice[i + 1, j]) - 2*h * lattice[i, j]
+    delta_E = 2*lattice[i, j] * (lattice[i, j - 1] + lattice[i - 1, j] + lattice[i, j + 1] + lattice[i + 1, j]) + 2*h * lattice[i, j]
 
-    return not (delta_E > 0 and np.exp(-(delta_E)/(kb * T)) > gamma)
+    return delta_E < 0 or gamma < np.exp(-(delta_E)/(kb * T))
 
 
 
@@ -137,7 +137,7 @@ def metro_ising(lattice, L, T, h):
 #--------------------------------------------------------------------------------------------------------------------------------------
 
 
-chain_lenght = 100 # 10000 is too big
+chain_lenght = 10000
 N = 64
 kb = 1 #boltzman constant
 
@@ -150,13 +150,18 @@ if ex == "2a":
 
     # a)
 
-    h = 1
-    T = 100
+    h = 0
+    T = [0.1, 0.5, 2, 10]
 
-    lattice = update_bounds((np.random.rand(N + 2, N + 2) < 0.5) - 0.5)  # +2 because of periodic bounds
-    m, final_lattice = metro_ising(lattice, chain_lenght, T, h)
-    sns.heatmap(final_lattice[1:N, 1:N], xticklabels=False, yticklabels=False, cbar=False)
-    plt.title("2 a) with T = " + str(T))
+    plt_num = 1
+    for temp in T:
+        lattice = update_bounds((np.random.rand(N + 2, N + 2) < 0.5) - 0.5)  # +2 because of periodic bounds
+        m, final_lattice = metro_ising(lattice, chain_lenght, temp, h)
+        plt.subplot(2, 2, plt_num)
+        sns.heatmap(final_lattice[1:N, 1:N], xticklabels=False, yticklabels=False, cbar=False)
+        plt.title("T = " + str(temp))
+        plt_num += 1
+
     plt.show()
 
 
