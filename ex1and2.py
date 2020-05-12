@@ -5,8 +5,8 @@ import seaborn as sns
 # choose esercise
 
 #ex = "1"
-ex = "2a"
-#ex = "2b"
+#ex = "2a"
+ex = "2b"
 
 # EXERCISE 1
 # FUNCTIONS
@@ -175,17 +175,18 @@ elif ex == "2b":
 
     #b)
 
+    chain_lenght = 1000
     h_arr = [0, 0.1, 0.5, 1, 5, 10]
     T = np.linspace(0.1, 100, 10)
 
     i = 0
     for h in h_arr:
 
-        m_val = []
+        m_val = np.array([])
         lattice = update_bounds((np.random.rand(N + 2, N + 2) < 0.5) - 0.5)  # +2 because of periodic bounds
         for temp in T:
             m, _ = metro_ising(lattice, chain_lenght, temp, h_arr[i])
-            m_val.append(m)
+            m_val = np.append(m_val, m)
 
         plt.plot(T, m_val, label="h = " + str(h_arr[i]))
         i += 1
