@@ -5,8 +5,8 @@ import seaborn as sns
 # choose esercise
 
 #ex = "1"
-#ex = "2a"
-ex = "2b"
+ex = "2a"
+#ex = "2b"
 
 # EXERCISE 1
 # FUNCTIONS
@@ -33,21 +33,19 @@ def next_chain_link(x, y):
 def metro_alg(N):
     """ metropolis algorithm that creates markov chain of lenght N """
 
-    chain = []
-    chain_removed = []
-    chain.append(0)
-    chain_removed.append(0)
+    chain = np.zeros(N) # start with x_0 = 0
+    chain_removed = np.array([0])
+    j = 0
+    for i in range(N-1):
 
-    for i in range(N):
-        j = 0
         y = (np.random.rand()-0.5)*10
         if next_chain_link(chain[i], y):
-            chain.append(y)
+            chain[i + 1] = y
         else:
-            chain.append(chain[i])
+            chain[i + 1] = chain[i]
 
         if next_chain_link(chain_removed[j], y):
-            chain_removed.append(y)
+            chain_removed = np.append(chain_removed, y) # append creates new array, does not change array argument
             j += 1
 
     return chain, chain_removed
@@ -56,6 +54,7 @@ def metro_alg(N):
 # PLOT
 #--------------------------------------------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------------------------------------------
+
 
 if ex == "1":
 
@@ -66,11 +65,13 @@ if ex == "1":
     sns.distplot(chain, label="chain")
     sns.distplot(chain_removed, label="chain removed")
     plt.plot(x_values, w(x_values), label="weight")
+    plt.title("N = " + str(N))
     plt.legend()
     plt.show()
 
-#a) little bump at the peak probably comes from random.rand which creates random number between 0 and whithout 1?
-#b) chain-removed has slightly lower peak but very little
+
+#a) little bump at the peak maybe comes from np.random.rand which creates random number between 0 and whithout 1?
+#b) chain_removed has  lower peak
 
 
 # EXERCISE 2
@@ -97,6 +98,7 @@ def update_bounds(lattice):
     return lattice
 
 
+
 def H(lattice, i, j, h, T):
     """ checks wether spin flip is accepted,
     energy difference only depends on the neighbours of spin flipped site """
@@ -107,22 +109,27 @@ def H(lattice, i, j, h, T):
     return not (delta_E > 0 and np.exp(-(delta_E)/(kb * T)) > gamma)
 
 
+
 def metro_ising(lattice, L, T, h):
     """ does metropolis algorythm L times and calculates magnetization m """
 
     m = 0.0
 
-    for i in range(0, L): # todo just L
-        rand_row = np.random.choice(np.arange(1, N+1)) # todo rand_row, rnad_col = .. possible?
+    for i in range(L):
+        rand_row = np.random.choice(np.arange(1, N+1))
         rand_col = np.random.choice(np.arange(1, N+1))
 
         if H(lattice, rand_row, rand_col, h, T):
-            lattice[rand_row][rand_col] *= -1
-            lattice = update_bounds(lattice)
+            lattice[rand_row, rand_col] *= -1
 
-        m += np.sum(lattice[1:N + 1, 1:N + 1]) # todo try .sum()
+            # check whether bounds have to be updated
+            if np.isin(rand_col, [0, N+1]) or np.isin(rand_row, [0, N+1]):
+                lattice = update_bounds(lattice)
+
+        m += np.sum(lattice[1:N + 1, 1:N + 1])
 
     return m/L, lattice
+
 
 
 # PLOT a)
@@ -143,13 +150,13 @@ if ex == "2a":
 
     # a)
 
-    h = 100
-    T = 1
+    h = 1
+    T = 100
 
     lattice = update_bounds((np.random.rand(N + 2, N + 2) < 0.5) - 0.5)  # +2 because of periodic bounds
     m, final_lattice = metro_ising(lattice, chain_lenght, T, h)
     sns.heatmap(final_lattice[1:N, 1:N], xticklabels=False, yticklabels=False, cbar=False)
-    plt.title("T = " + str(T))
+    plt.title("2 a) with T = " + str(T))
     plt.show()
 
 
@@ -163,10 +170,8 @@ elif ex == "2b":
 
     #b)
 
-    # todo = 2*np.random.randint(2, size=(10,10))-1
-
-    h_arr = [0, 0.1, 0.5, 1, 5, 10]  # todo find better h's
-    T = np.linspace(0.1, 30, 10)
+    h_arr = [0, 0.1, 0.5, 1, 5, 10]
+    T = np.linspace(0.1, 100, 10)
 
     i = 0
     for h in h_arr:
@@ -183,8 +188,8 @@ elif ex == "2b":
 
     plt.ylabel("magnetization m")
     plt.xlabel("Temperature T")
-    plt.grid() # todo start graph at 0
+    plt.xlim(T[0], T[-1])
+    plt.title("2 b)")
+    plt.grid()
     plt.legend()
     plt.show()
-
-
