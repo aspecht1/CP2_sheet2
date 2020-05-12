@@ -62,12 +62,11 @@ def a(body, u, direction):
 def f(u, body):
     """" calculates f = du/dt for given body and multiplies it with dt """
 
-    f = []
-    f.append(u[body, 2]*dt)
-    f.append(u[body, 3]*dt)
-    f.append(-m**2*G*a(body, u, "x")*dt)
-    f.append(-m**2*G*a(body, u, "y")*dt)
-
+    f = np.empty(4)
+    f[0] = u[body, 2] * dt
+    f[1] = u[body, 3] * dt
+    f[2] = -m ** 2 * G * a(body, u, "x") * dt
+    f[3] = -m ** 2 * G * a(body, u, "y") * dt
     return f
 
 
@@ -87,8 +86,12 @@ def euler(u_int, time_steps):
 
         new_u = np.empty(shape=(N, 4))
         for body in range(N):
-            new_u[body] = np.add(u[body, :], f(u, body))
-            new_u[body] = np.array([sum(i) for i in zip(u[body, :], f(u, body))]) # this adds two lists elment wise
+            #new_u[body] = u[body, :] + f(u, body) # Euler
+            c1 = f(u, body) # Runge-Kutta
+            c2 = f(u + 0.5*c1, body)
+            c3 = f(u + 0.5*c2, body)
+            c4 = f(u + c3, body)
+            new_u[body] = u[body, :] + (c1 + 2*c2 + 2*c3 + c4)/6
             x[step + 1, body] = new_u[body, 0]
             y[step + 1, body] = new_u[body, 1]
 
@@ -125,7 +128,7 @@ for body in range(N):
 # d) choose whether to displace first body at t=0
 #--------------------------------------------------------------------------------------------------------------------------------------
 
-d = True
+d = False
 displacement = N/100
 if d:
     u_int[0, 0] = (R * np.cos((displacement - 1) * 2 * np.pi / N))  # x
@@ -159,6 +162,7 @@ def animate(i): # calls the i'th frame
     plt.plot(circle_x, circle_y, 'o', linewidth=20, markersize=30)
     plt.title('t = ' + str(i))
 
-anim = animation.FuncAnimation(fig, animate, init_func=init, interval=10, frames=time_steps-1, repeat=False) # interval is delay between frames in ms
+anim = animation.FuncAnimation(fig, animate, init_func=init, interval=1, frames=time_steps-1, repeat=False) # interval is delay between frames in ms
 plt.show()
-#anim.save('/Users/alexspecht/Desktop/animation2.gif', writer='imagemagick', fps=60)
+#anim.save('/Users/alexspecht/Desktop/animation2.gif', writer='imagemagick', fps=60) # save gif
+
